@@ -109,7 +109,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 {
   public:
     SatRx(Config &cfg, const string &rx_name, int id, int fifo_length_ms)
-      : rx_id(id), rx(0), fifo(0), sql_open(false)
+      : rx_id(id), rx(0), fifo(0), sql_open(false), rx_enabled(true)
     {
       rx = RxFactory::createNamedRx(cfg, rx_name);
       if (rx != 0)
@@ -174,6 +174,12 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     }
     
     float signalStrength(void) const { return rx->signalStrength(); }
+    
+    bool isEnabled(void) const { return rx_enabled; }
+    
+    void Enable(void) { rx_enabled = true; }
+    
+    void Disable(void) { rx_enabled = false; }
 
     void setMuteState(Rx::MuteState new_mute_state)
     {
@@ -745,13 +751,16 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
 void Voter::Top::satSignalLevelUpdated(SatRx *srx, float siglev)
 {
   assert(srx != 0);
-  assert(bestSrx() != 0);
+  //assert(bestSrx() != 0);
   assert(srx->squelchIsOpen());
   
-  if (!bestSrx()->squelchIsOpen() ||
-      (siglev > bestSrx()->signalStrength()))
+  if (bestSrx() != 0) 
   {
-    box().best_srx = srx;
+    if(!bestSrx()->squelchIsOpen() ||
+        (siglev > bestSrx()->signalStrength()))
+    {
+      box().best_srx = srx;
+    }
   }
 
   if (srx == activeSrx())
@@ -864,16 +873,19 @@ void Voter::Idle::entry(void)
 
 void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
 {
-  SUPER::satSquelchOpen(srx, is_open);
-  if (is_open)
+  if (srx->isEnabled) 
   {
-    if (srx->signalStrength() * hysteresis() > 100.0f)
+    SUPER::satSquelchOpen(srx, is_open);
+    if (is_open)
     {
-      setState<ActiveRxSelected>(bestSrx());
-    }
-    else
-    {
-      setState<VotingDelay>();
+      if (srx->signalStrength() * hysteresis() > 100.0f)
+      {
+        setState<ActiveRxSelected>(bestSrx());
+      }
+      else
+      {
+        setState<VotingDelay>();
+      }
     }
   }
 } /* Voter::Idle::satSquelchOpen */
