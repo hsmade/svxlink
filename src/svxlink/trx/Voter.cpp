@@ -177,9 +177,15 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     
     bool isEnabled(void) const { return rx_enabled; }
     
-    void Enable(void) { rx_enabled = true; }
+    void Enable(void) { 
+    	rx_enabled = true; 
+    	runTask(mem_fun(voter(), &Voter::printOperationalState));
+    }
     
-    void Disable(void) { rx_enabled = false; }
+    void Disable(void) { 
+    	rx_enabled = false; 
+    	runTask(mem_fun(voter(), &Voter::printOperationalState));
+    }
 
     void setMuteState(Rx::MuteState new_mute_state)
     {
@@ -645,6 +651,30 @@ void Voter::printSquelchState(void)
   }
   publishStateEvent("Voter:sql_state", os.str());
 } /* Voter::printSquelchState */
+
+void Voter::printOperationalState(void)
+{
+  stringstream os;
+  os << setfill('0') << std::internal;
+
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    bool rx_enabled = (*it)->isEnabled();
+
+    os << (*it)->name();
+    if (rx_enabled)
+    {
+      os << "+";
+    }
+    else
+    {
+      os << "-";
+    }
+    os << " ";
+  }
+  publishStateEvent("Voter:opr_state", os.str());
+} /* Voter::printOperationalState */
 
 
 Voter::SatRx *Voter::findBestRx(void) const
