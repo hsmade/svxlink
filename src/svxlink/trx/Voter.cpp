@@ -178,13 +178,14 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     bool isEnabled(void) const { return rx_enabled; }
     
     void Enable(void) { 
-    	rx_enabled = true; 
-    	runTask(mem_fun(voter(), &Voter::printOperationalState));
+    	rx_enabled = true;
+//    	runTask(mem_fun(Voter::voter(), &Voter::printOperationalState)); # FIXME: get this working
     }
     
-    void Disable(void) { 
+    void Disable(void) {
+        cout << "Disable called" << endl;
     	rx_enabled = false; 
-    	runTask(mem_fun(voter(), &Voter::printOperationalState));
+//    	runTask(mem_fun(Voter::voter(), &Voter::printOperationalState));
     }
 
     void setMuteState(Rx::MuteState new_mute_state)
@@ -254,6 +255,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     DtmfBuf   	dtmf_buf;
     SelcallBuf	selcall_buf;
     bool      	sql_open;
+    bool        rx_enabled;
     
     void onDtmfDigitDetected(char digit, int duration)
     {
@@ -347,7 +349,7 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
 
 Voter::Voter(Config &cfg, const std::string& name)
   : Rx(cfg, name), cfg(cfg), m_verbose(true), selector(0),
-    sm(Macho::State<Top>(this)), is_processing_event(false)
+    sm(Macho::State<Top>(this)), is_processing_event(false), voter_pty(0)
 {
   Rx::setVerbose(false);
 } /* Voter::Voter */
@@ -378,7 +380,24 @@ bool Voter::initialize(void)
   {
     return false;
   }
-  
+
+  // WIM start
+  string voter_pty_path;
+//  cfg().getValue(name(), "VOTER_PTY", voter_pty_path);
+  voter_pty_path = "/var/run/svxlink/voter"; // FIXME: get from config
+  if (!voter_pty_path.empty()) {
+    voter_pty = new Pty(voter_pty_path);
+    if (!voter_pty->open()) {
+      cerr << "*** ERROR: Could not open voter PTY "
+      <<voter_pty_path << " as specified in configuration variable "
+      << name() << "/" << "VOTER_PTY" << endl;
+      return false;
+    }
+    // WIM
+    voter_pty->dataReceived.connect(sigc::mem_fun(*this, &Voter::testHandler));
+  }
+  // WIM end
+
   string receivers;
   if (!cfg.getValue(name(), "RECEIVERS", receivers))
   {
@@ -560,6 +579,15 @@ void Voter::reset(void)
  * Private member functions
  *
  ****************************************************************************/
+void Voter::testHandler(const void *buf, size_t count) {
+  cout << "testhandler received: " << (char *) buf << endl;
+  char * command = (char *) buf;
+  if (command[0] == '0') {
+    Voter::disableSat("Rx2");
+  } else {
+    Voter::enableSat("Rx2");
+  }
+}
 
 void Voter::dispatchEvent(Macho::IEvent<Top> *event)
 {
@@ -625,6 +653,35 @@ void Voter::resetAll(void)
   }
 } /* Voter::resetAll */
 
+void Voter::disableSat(char *name)
+{
+  cout << "Disablesat called with:" << name << ":" << endl;
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    cout << "Voter::disableSat loop:" << (*it)->name() << ":" << endl;
+    if ((*it)->name().compare(name) == 0)
+    {
+      cout << "Voter::disableSat loop: disabling " << (*it)->name() << endl;
+      (*it)->Disable();
+    }
+  }
+}
+
+void Voter::enableSat(char *name)
+{
+  cout << "Enablesat called with:" << name << ":" << endl;
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    cout << "Voter::EnableSat loop:" << (*it)->name() << ":" << endl;
+    if ((*it)->name().compare(name) == 0)
+    {
+      cout << "Voter::EnableSat loop: enabling " << (*it)->name() << endl;
+      (*it)->Enable();
+    }
+  }
+}
 
 void Voter::printSquelchState(void)
 {
@@ -652,29 +709,29 @@ void Voter::printSquelchState(void)
   publishStateEvent("Voter:sql_state", os.str());
 } /* Voter::printSquelchState */
 
-void Voter::printOperationalState(void)
-{
-  stringstream os;
-  os << setfill('0') << std::internal;
-
-  list<SatRx *>::iterator it;
-  for (it=rxs.begin(); it!=rxs.end(); ++it)
-  {
-    bool rx_enabled = (*it)->isEnabled();
-
-    os << (*it)->name();
-    if (rx_enabled)
-    {
-      os << "+";
-    }
-    else
-    {
-      os << "-";
-    }
-    os << " ";
-  }
-  publishStateEvent("Voter:opr_state", os.str());
-} /* Voter::printOperationalState */
+//void Voter::printOperationalState(void)
+//{
+//  stringstream os;
+//  os << setfill('0') << std::internal;
+//
+//  list<SatRx *>::iterator it;
+//  for (it=rxs.begin(); it!=rxs.end(); ++it)
+//  {
+//    bool rx_enabled = (*it)->isEnabled();
+//
+//    os << (*it)->name();
+//    if (rx_enabled)
+//    {
+//      os << "+";
+//    }
+//    else
+//    {
+//      os << "-";
+//    }
+//    os << " ";
+//  }
+//  publishStateEvent("Voter:opr_state", os.str());
+//} /* Voter::printOperationalState */
 
 
 Voter::SatRx *Voter::findBestRx(void) const
@@ -757,7 +814,7 @@ void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
   
   if (bestSrx() == 0)
   {
-    assert(is_open);
+    assert(is_open); // FIXME: asserts on enable when disabled while open
     box().best_srx = srx;
   }
   else if (srx == bestSrx())
@@ -903,7 +960,7 @@ void Voter::Idle::entry(void)
 
 void Voter::Idle::satSquelchOpen(SatRx *srx, bool is_open)
 {
-  if (srx->isEnabled) 
+  if (srx->isEnabled())
   {
     SUPER::satSquelchOpen(srx, is_open);
     if (is_open)
