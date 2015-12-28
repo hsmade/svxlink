@@ -199,7 +199,7 @@ class Voter : public Rx
     static CONSTEXPR unsigned MIN_REVOTE_INTERVAL            = 100;
     static CONSTEXPR unsigned MAX_REVOTE_INTERVAL            = 60000;
     static CONSTEXPR unsigned MAX_RX_SWITCH_DELAY            = 3000;
-	void testHandler(const void *buf, size_t count); // WIM
+	void commandHandler(const void *buf, size_t count); // WIM
 	void disableSat(char *name);
 	void enableSat(char *name);
 
@@ -423,6 +423,7 @@ class Voter : public Rx
     void unmuteAll(void);
     void resetAll(void);
 	void printSquelchState(void);
+	void printOperationalState(void);
     SatRx *findBestRx(void) const;
 	Async::Pty                      *voter_pty;
 

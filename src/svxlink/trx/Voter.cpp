@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <sigc++/bind.h>
 #include <sys/time.h>
+#include <execinfo.h>
+#include <string.h>
 
 
 /****************************************************************************
@@ -178,18 +180,18 @@ class Voter::SatRx : public AudioSource, public sigc::trackable
     bool isEnabled(void) const { return rx_enabled; }
     
     void Enable(void) { 
-    	rx_enabled = true;
-//    	runTask(mem_fun(Voter::voter(), &Voter::printOperationalState)); # FIXME: get this working
+      rx_enabled = true;
+      setMuteState(MUTE_NONE);
     }
     
     void Disable(void) {
-        cout << "Disable called" << endl;
-    	rx_enabled = false; 
-//    	runTask(mem_fun(Voter::voter(), &Voter::printOperationalState));
+      rx_enabled = false;
+      setMuteState(MUTE_ALL);
     }
 
     void setMuteState(Rx::MuteState new_mute_state)
     {
+      cout << "setMuteState: " << new_mute_state << endl;
       rx->setMuteState(new_mute_state);
       if (new_mute_state != Rx::MUTE_NONE)
       {
@@ -381,7 +383,6 @@ bool Voter::initialize(void)
     return false;
   }
 
-  // WIM start
   string voter_pty_path;
 //  cfg().getValue(name(), "VOTER_PTY", voter_pty_path);
   voter_pty_path = "/var/run/svxlink/voter"; // FIXME: get from config
@@ -393,10 +394,8 @@ bool Voter::initialize(void)
       << name() << "/" << "VOTER_PTY" << endl;
       return false;
     }
-    // WIM
-    voter_pty->dataReceived.connect(sigc::mem_fun(*this, &Voter::testHandler));
+    voter_pty->dataReceived.connect(sigc::mem_fun(*this, &Voter::commandHandler));
   }
-  // WIM end
 
   string receivers;
   if (!cfg.getValue(name(), "RECEIVERS", receivers))
@@ -579,13 +578,19 @@ void Voter::reset(void)
  * Private member functions
  *
  ****************************************************************************/
-void Voter::testHandler(const void *buf, size_t count) {
-  cout << "testhandler received: " << (char *) buf << endl;
+void Voter::commandHandler(const void *buf, size_t count) {
+//  cout << "commandHandler received: " << (char *) buf << endl;
   char * command = (char *) buf;
-  if (command[0] == '0') {
-    Voter::disableSat("Rx2");
+  if (command[0] == '?') {
+    printOperationalState();
   } else {
-    Voter::enableSat("Rx2");
+    char * receiver = strsep(&command, ":");
+    if (command[0] == '0') {
+      Voter::disableSat(receiver);
+    } else {
+      Voter::enableSat(receiver);
+    }
+    printOperationalState();
   }
 }
 
@@ -655,14 +660,15 @@ void Voter::resetAll(void)
 
 void Voter::disableSat(char *name)
 {
-  cout << "Disablesat called with:" << name << ":" << endl;
+//  cout << "Disablesat called with:" << name << ":" << endl;
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    cout << "Voter::disableSat loop:" << (*it)->name() << ":" << endl;
+//    cout << "Voter::disableSat loop:" << (*it)->name() << ":" << endl;
     if ((*it)->name().compare(name) == 0)
     {
-      cout << "Voter::disableSat loop: disabling " << (*it)->name() << endl;
+//      cout << "Voter::disableSat loop: disabling " << (*it)->name() << endl;
+      cout << "Disabling receiver " << (*it)->name() << endl;
       (*it)->Disable();
     }
   }
@@ -670,14 +676,15 @@ void Voter::disableSat(char *name)
 
 void Voter::enableSat(char *name)
 {
-  cout << "Enablesat called with:" << name << ":" << endl;
+//  cout << "Enablesat called with:" << name << ":" << endl;
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    cout << "Voter::EnableSat loop:" << (*it)->name() << ":" << endl;
+//    cout << "Voter::EnableSat loop:" << (*it)->name() << ":" << endl;
     if ((*it)->name().compare(name) == 0)
     {
-      cout << "Voter::EnableSat loop: enabling " << (*it)->name() << endl;
+//      cout << "Voter::EnableSat loop: enabling " << (*it)->name() << endl;
+      cout << "Enabling receiver " << (*it)->name() << endl;
       (*it)->Enable();
     }
   }
@@ -709,29 +716,30 @@ void Voter::printSquelchState(void)
   publishStateEvent("Voter:sql_state", os.str());
 } /* Voter::printSquelchState */
 
-//void Voter::printOperationalState(void)
-//{
-//  stringstream os;
-//  os << setfill('0') << std::internal;
-//
-//  list<SatRx *>::iterator it;
-//  for (it=rxs.begin(); it!=rxs.end(); ++it)
-//  {
-//    bool rx_enabled = (*it)->isEnabled();
-//
-//    os << (*it)->name();
-//    if (rx_enabled)
-//    {
-//      os << "+";
-//    }
-//    else
-//    {
-//      os << "-";
-//    }
-//    os << " ";
-//  }
-//  publishStateEvent("Voter:opr_state", os.str());
-//} /* Voter::printOperationalState */
+void Voter::printOperationalState(void)
+{
+  stringstream os;
+  os << setfill('0') << std::internal;
+
+  list<SatRx *>::iterator it;
+  for (it=rxs.begin(); it!=rxs.end(); ++it)
+  {
+    bool rx_enabled = (*it)->isEnabled();
+
+    os << (*it)->name();
+    if (rx_enabled)
+    {
+      os << "+";
+    }
+    else
+    {
+      os << "-";
+    }
+    os << " ";
+  }
+  publishStateEvent("Voter:opr_state", os.str());
+//  cout << "printOperationalState" << os.str() << endl;
+} /* Voter::printOperationalState */
 
 
 Voter::SatRx *Voter::findBestRx(void) const
@@ -811,11 +819,15 @@ void Voter::Top::setMuteState(Rx::MuteState new_mute_state)
 void Voter::Top::satSquelchOpen(SatRx *srx, bool is_open)
 {
   assert(srx != 0);
-  
+
   if (bestSrx() == 0)
   {
-    assert(is_open); // FIXME: asserts on enable when disabled while open
-    box().best_srx = srx;
+//    assert(is_open); // FIXME: asserts on enable when disabled while open
+    if (is_open) {
+      box().best_srx = srx;
+    } else {
+      cout << "ERROR: assert(is_open)" << endl;
+    }
   }
   else if (srx == bestSrx())
   {

@@ -125,6 +125,7 @@ using namespace sigc;
 
 static void parse_arguments(int argc, const char **argv);
 static void stdinHandler(FdWatch *w);
+//static void testHandler(FdWatch *w);
 static void stdout_handler(FdWatch *w);
 static void initialize_logics(Config &cfg);
 static void sighup_handler(int signal);
@@ -135,6 +136,7 @@ static void logfile_reopen(const char *reason);
 static bool logfile_write_timestamp(void);
 static void logfile_write(const char *buf);
 static void logfile_flush(void);
+
 
 
 /****************************************************************************
@@ -160,7 +162,9 @@ static int    	      	logfd = -1;
 static vector<Logic*>  	logic_vec;
 static FdWatch	      	*stdin_watch = 0;
 static FdWatch	      	*stdout_watch = 0;
+//static FdWatch	      	*test_watch = 0;
 static string         	tstamp_format;
+//static int              test_fd;
 
 
 /****************************************************************************
@@ -520,6 +524,17 @@ int main(int argc, char **argv)
     // with ptr_fun() in /usr/include/c++/4.5/bits/stl_function.h
     stdin_watch->activity.connect(sigc::ptr_fun(&stdinHandler));
   }
+
+//  int test_fd;
+//  test_fd = open("/tmp/test", O_RDONLY | O_NONBLOCK);
+//  struct termios test_termios;
+//  struct termios termios;
+//  tcgetattr(test_fd, &test_termios);
+//  termios = test_termios;
+//  termios.c_lflag &= ~(ICANON | ECHO);
+//  tcsetattr(test_fd, TCSANOW, &termios);
+//  test_watch = new FdWatch(test_fd, FdWatch::FD_WATCH_RD);
+//  test_watch->activity.connect(sigc::ptr_fun(&testHandler));
 
   app.exec();
 
@@ -936,6 +951,27 @@ static void logfile_flush(void)
   }
 } /*  logfile_flush */
 
+//static void testHandler(FdWatch *w)
+//{
+//  cout << "Test handler called" << endl;
+//  char buf[1];
+//  int cnt = ::read(test_fd, buf, 1);
+//  if (cnt == -1)
+//  {
+//    fprintf(stderr, "*** error reading from test\n");
+//    Application::app().quit();
+//    return;
+//  }
+//  else if (cnt == 0)
+//  {
+//    cout << "Closing test" << endl;
+//    /* Stdin file descriptor closed */
+//    delete test_watch;
+//    test_watch = 0;
+//    return;
+//  }
+//  cout << "TEST received: " << buf << endl;
+//}
 
 
 /*

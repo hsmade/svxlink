@@ -259,7 +259,7 @@ class Rx : public sigc::trackable, public Async::AudioSource
      */
     sigc::signal<void, const std::string&,
                  const std::string&> publishStateEvent;
-    
+
     /**
      * @brief   A signal that is emitted when the ready state changes
      */
