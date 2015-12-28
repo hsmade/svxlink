@@ -725,13 +725,14 @@ void Voter::printOperationalState(void)
     bool rx_enabled = (*it)->isEnabled();
 
     os << (*it)->name();
+    os << "=";
     if (rx_enabled)
     {
-      os << "+";
+      os << "1";
     }
     else
     {
-      os << "-";
+      os << "0";
     }
     os << " ";
   }
