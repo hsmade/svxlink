@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <sigc++/bind.h>
 #include <sys/time.h>
-#include <execinfo.h>
 #include <string.h>
 
 
@@ -384,9 +383,8 @@ bool Voter::initialize(void)
   }
 
   string voter_pty_path;
-//  cfg().getValue(name(), "VOTER_PTY", voter_pty_path);
-  voter_pty_path = "/var/run/svxlink/voter"; // FIXME: get from config
-  if (!voter_pty_path.empty()) {
+  if(cfg.getValue(name(), "VOTER_PTY", voter_pty_path))
+  {
     voter_pty = new Pty(voter_pty_path);
     if (!voter_pty->open()) {
       cerr << "*** ERROR: Could not open voter PTY "

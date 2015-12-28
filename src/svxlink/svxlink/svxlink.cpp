@@ -951,28 +951,6 @@ static void logfile_flush(void)
   }
 } /*  logfile_flush */
 
-//static void testHandler(FdWatch *w)
-//{
-//  cout << "Test handler called" << endl;
-//  char buf[1];
-//  int cnt = ::read(test_fd, buf, 1);
-//  if (cnt == -1)
-//  {
-//    fprintf(stderr, "*** error reading from test\n");
-//    Application::app().quit();
-//    return;
-//  }
-//  else if (cnt == 0)
-//  {
-//    cout << "Closing test" << endl;
-//    /* Stdin file descriptor closed */
-//    delete test_watch;
-//    test_watch = 0;
-//    return;
-//  }
-//  cout << "TEST received: " << buf << endl;
-//}
-
 
 /*
  * This file has not been truncated
