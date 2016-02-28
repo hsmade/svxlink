@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <cstdlib>
 #include <vector>
+#include <string.h>
 
 #include <string.h>
 
@@ -948,6 +949,32 @@ void ModuleEchoLink::onError(const string& msg)
 
 /*
  *----------------------------------------------------------------------------
+ * Method:    clientList
+ * Purpose:   Called on connect or disconnect of a remote client to send an
+ *    	      event to list the connected stations.
+ * Input:     None
+ * Output:    None
+ * Author:    Wim Fournier / PH7WIM
+ * Created:   2016-01-11
+ * Remarks:
+ * Bugs:
+ *----------------------------------------------------------------------------
+ */
+void ModuleEchoLink::clientList(void) {
+  stringstream ss;
+  ss << "clients [list";
+  vector<QsoImpl *>::iterator it;
+  for (it = qsos.begin(); it != qsos.end(); ++it) {
+    if ((*it)->currentState() != Qso::STATE_DISCONNECTED) {
+      ss << " " << (*it)->remoteCallsign();
+    }
+  }
+  ss << "]";
+  processEvent(ss.str());
+} /* clientList */
+
+/*
+ *----------------------------------------------------------------------------
  * Method:    onIncomingConnection
  * Purpose:   Called by the EchoLink::Dispatcher object when a new remote
  *    	      connection is coming in.
@@ -1076,6 +1103,7 @@ void ModuleEchoLink::onIncomingConnection(const IpAddress& ip,
   qso->accept();
   broadcastTalkerStatus();
   updateDescription();
+  clientList();
 
   if (LocationInfo::has_instance())
   {
@@ -1135,6 +1163,7 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
 
       broadcastTalkerStatus();
       updateDescription();
+      clientList();
       break;
     }
     
@@ -1209,7 +1238,7 @@ void ModuleEchoLink::onIsReceiving(bool is_receiving, QsoImpl *qso)
   //     << (is_receiving ? "TRUE" : "FALSE") << endl;
   
   stringstream ss;
-  ss << "is_receiving " << (is_receiving ? "1" : "0");
+  ss << "is_receiving " << (is_receiving ? "1" : "0") << " " << qso->remoteCallsign();
   processEvent(ss.str());
 
   if ((talker == 0) && is_receiving)
