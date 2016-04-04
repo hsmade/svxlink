@@ -452,13 +452,13 @@ bool Logic::initialize(void)
 	mem_fun(*this, &Logic::audioFromModuleStreamStateChanged));
   audio_from_module_splitter->addSink(audio_from_module_idle_det, true);
   tx_audio_selector->addSource(audio_from_module_idle_det);
-  tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 0);
+  tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 20);
 
     // Connect audio from modules to the inter logic audio output
   passthrough = new AudioPassthrough;
   audio_from_module_splitter->addSink(passthrough, true);
   logic_con_out->addSource(passthrough);
-  logic_con_out->enableAutoSelect(passthrough, 0);
+  logic_con_out->enableAutoSelect(passthrough, 10);
 
     // Create the qso recorder if QSO_RECORDER is properly set
   SepPair<string, string> qso_rec_cfg;
