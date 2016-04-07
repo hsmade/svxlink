@@ -129,7 +129,8 @@ class AudioSelector : public AudioSource
      * @param 	source The audio source to add
      */
     void addSource(AudioSource *source);
-    
+    void addSource(AudioSource *source, char *name);
+
     /**
      * @brief 	Remove a previously added audio source from the selector
      * @param 	source The audio source to remove
