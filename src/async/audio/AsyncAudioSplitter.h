@@ -127,7 +127,7 @@ class AudioSplitter : public Async::AudioSink, public Async::AudioSource,
      * @brief 	Destructor
      */
     ~AudioSplitter(void);
-  
+
     /**
      * @brief 	Add an audio sink to the splitter
      * @param 	sink  	The sink object to add

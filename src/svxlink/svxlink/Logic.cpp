@@ -396,13 +396,13 @@ bool Logic::initialize(void)
     // Connect RX audio to the modules
   AudioPassthrough *passthrough = new AudioPassthrough;
   rx_splitter->addSink(passthrough, true);
-  audio_to_module_selector->addSource(passthrough);
+  audio_to_module_selector->addSource(passthrough, "audio_to_module_selector-rx_splitter");
   audio_to_module_selector->enableAutoSelect(passthrough, 10);
 
     // Connect inter logic audio input to the modules
   passthrough = new AudioPassthrough;
   logic_con_in->addSink(passthrough, true);
-  audio_to_module_selector->addSource(passthrough);
+  audio_to_module_selector->addSource(passthrough, "audio_to_module_selector-logic_con_in");
   audio_to_module_selector->enableAutoSelect(passthrough, 0);
 
     // Split audio to all modules
@@ -426,7 +426,7 @@ bool Logic::initialize(void)
   AudioSource *prev_tx_src = tx_audio_selector;
 
     // Connect the direct RX to TX audio valve to the TX audio selector
-  tx_audio_selector->addSource(rpt_valve);
+  tx_audio_selector->addSource(rpt_valve, "tx_audio_selector-rpt_valve");
   tx_audio_selector->enableAutoSelect(rpt_valve, 20);
 
     // Connect incoming intra logic audio to the TX audio selector
@@ -436,7 +436,7 @@ bool Logic::initialize(void)
   logic_con_in_idle_det->sigStreamStateChanged.connect(
 	mem_fun(*this, &Logic::logicConInStreamStateChanged));
   logic_con_in->addSink(logic_con_in_idle_det, true);
-  tx_audio_selector->addSource(logic_con_in_idle_det);
+  tx_audio_selector->addSource(logic_con_in_idle_det, "tx_audio_selector-logic_con_in_idle_det");
   tx_audio_selector->enableAutoSelect(logic_con_in_idle_det, 10);
 
     // Create a selector and a splitter to handle audio from modules
@@ -451,14 +451,14 @@ bool Logic::initialize(void)
   audio_from_module_idle_det->sigStreamStateChanged.connect(
 	mem_fun(*this, &Logic::audioFromModuleStreamStateChanged));
   audio_from_module_splitter->addSink(audio_from_module_idle_det, true);
-  tx_audio_selector->addSource(audio_from_module_idle_det);
-  tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 20);
+  tx_audio_selector->addSource(audio_from_module_idle_det, "tx_audio_selector-audio_from_module_idle_det");
+  tx_audio_selector->enableAutoSelect(audio_from_module_idle_det, 20); // 20
 
     // Connect audio from modules to the inter logic audio output
   passthrough = new AudioPassthrough;
   audio_from_module_splitter->addSink(passthrough, true);
   logic_con_out->addSource(passthrough);
-  logic_con_out->enableAutoSelect(passthrough, 10);
+  logic_con_out->enableAutoSelect(passthrough, 10); // 10
 
     // Create the qso recorder if QSO_RECORDER is properly set
   SepPair<string, string> qso_rec_cfg;
@@ -1456,6 +1456,7 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 
 void Logic::audioStreamStateChange(bool is_active, bool is_idle)
 {
+  cout << "Logic::audioStreamStateChange(is_active:" << is_active << " is_idle:" << is_idle << ')' << endl;
   if (is_active)
   {
     fx_gain_ctrl->setGain(fx_gain_low);
