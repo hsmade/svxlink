@@ -1,8 +1,9 @@
 stages:
-- build
+- build_deb
+- build_image
 
-buid:
-  stage: build
+buid_deb:
+  stage: build_deb
   tags:
   - docker
   script:
@@ -11,3 +12,15 @@ buid:
   artifacts:
     paths:
     - /package/*.deb
+
+build_image:
+  stage: build_image
+  tags: vps
+  image: docker:git
+  services:
+  - docker:dind
+  script:
+  - ls /package
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+  - docker build -t registry.gitlab.com/hsmade/svxlink .
+  - docker push registry.gitlab.com/hsmade/svxlink:latest
