@@ -15,7 +15,8 @@ buid_deb:
 
 build_image:
   stage: build_image
-  tags: vps
+  tags: 
+  - vps
   image: docker:git
   services:
   - docker:dind
