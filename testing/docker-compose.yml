@@ -1,0 +1,69 @@
+svxlink:
+  container_name: svxlink
+  image: registry.gitlab.com/hsmade/svxlink
+  volumes:
+  - ./svxlink.conf:/etc/svxlink/svxlink.conf
+  - /dev/snd:/dev/snd
+  - ./ModuleEchoLink.conf:/etc/svxlink/svxlink.d/ModuleEchoLink.conf
+  - ./EchoLink.tcl:/usr/share/svxlink/events.d/local/EchoLink.tcl
+  - ./squelch.sh:/squelch.sh
+  - ./control.sh:/control.sh
+  command: svxlink 
+  privileged: true
+  ports:
+  - 5200:5200
+
+remote1:
+  container_name: remote1
+  image: registry.gitlab.com/hsmade/svxlink
+  volumes:
+  - ./remotetrx1.conf:/etc/svxlink/remotetrx.conf
+  - ./squelch.sh:/squelch.sh
+  command: remotetrx
+  privileged: true
+  ports:
+  - 5211:5210
+
+remote2:
+  container_name: remote2
+  image: registry.gitlab.com/hsmade/svxlink
+  volumes:
+  - ./remotetrx2.conf:/etc/svxlink/remotetrx.conf
+  - ./squelch.sh:/squelch.sh
+  command: remotetrx
+  privileged: true
+  ports:
+  - 5212:5210
+
+remote3:
+  container_name: remote3
+  image: registry.gitlab.com/hsmade/svxlink
+  volumes:
+  - ./remotetrx3.conf:/etc/svxlink/remotetrx.conf
+  - ./squelch.sh:/squelch.sh
+  command: remotetrx
+  privileged: true
+  ports:
+  - 5213:5210
+
+remote4:
+  container_name: remote4
+  image: registry.gitlab.com/hsmade/svxlink
+  volumes:
+  - ./remotetrx4.conf:/etc/svxlink/remotetrx.conf
+  - ./squelch.sh:/squelch.sh
+  command: remotetrx
+  privileged: true
+  ports:
+  - 5214:5210
+
+remote5:
+  container_name: remote5
+  image: registry.gitlab.com/hsmade/svxlink
+  volumes:
+  - ./remotetrx5.conf:/etc/svxlink/remotetrx.conf
+  - ./squelch.sh:/squelch.sh
+  command: remotetrx
+  privileged: true
+  ports:
+  - 5215:5210

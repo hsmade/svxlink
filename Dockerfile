@@ -6,3 +6,4 @@ RUN apt-get update && apt-get install -y libsigc++-2.0-0v5 libgsm1 \
         libopus0 librtlsdr0 && \
     rm -rf /var/lib/apt/lists/*
 RUN dpkg -i /tmp/out.deb
+CMD ["svxlink"]
