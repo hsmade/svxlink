@@ -1,0 +1,13 @@
+stages:
+- build
+
+buid:
+  stage: build
+  tags:
+  - docker
+  script:
+  - /build.sh
+  image: hsmade/svxlink-buildpackage 
+  artifacts:
+    paths:
+    - /packages/*.deb
