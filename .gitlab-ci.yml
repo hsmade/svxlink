@@ -11,7 +11,7 @@ buid_deb:
   image: hsmade/svxlink-buildpackage 
   artifacts:
     paths:
-    - *.deb
+    - out.deb
 
 build_image:
   stage: build_image
