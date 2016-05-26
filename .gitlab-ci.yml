@@ -10,4 +10,4 @@ buid:
   image: hsmade/svxlink-buildpackage 
   artifacts:
     paths:
-    - /packages/*.deb
+    - /package/*.deb

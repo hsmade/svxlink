@@ -1190,9 +1190,9 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
  */
 void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
 {
-  //cout << "--- EchoLink chat message received from " << qso->remoteCallsign()
-  //     << " ---" << endl
-  //     << msg << endl;
+  cout << "--- EchoLink chat message received from " << qso->remoteCallsign()
+       << " ---" << endl
+       << msg << endl;
   
   vector<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
@@ -1208,6 +1208,7 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
   replaceAll(escaped, "\\", "\\\\");
   replaceAll(escaped, "{", "\\{");
   replaceAll(escaped, "}", "\\}");
+  cout << "echolink: chat_received: " << escaped << endl;
   stringstream ss;
     // FIXME: This TCL specific code should not be here
   ss << "chat_received [subst -nocommands -novariables {";
