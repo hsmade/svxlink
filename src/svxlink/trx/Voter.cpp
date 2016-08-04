@@ -651,7 +651,7 @@ void Voter::setRxStatus(char *name, bool status)
   list<SatRx *>::iterator it;
   for (it=rxs.begin(); it!=rxs.end(); ++it)
   {
-    if ((*it)->name().compare(name) == 0)
+    if ((*it)->name().compare(name) == 0 || strstr(name, "ALL_RX"))
     {
       cout << "Voter: " << (status?"Enabling":"Disabling") << " receiver " << (*it)->name() << endl;
       (*it)->setEnabled(status);
