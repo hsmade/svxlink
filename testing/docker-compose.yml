@@ -12,6 +12,8 @@ svxlink:
   privileged: true
   ports:
   - 5200:5200
+  - 5198:5198/udp
+  - 5199:5199/udp
 
 remote1:
   container_name: remote1
