@@ -22,6 +22,6 @@ build_image:
   - docker:dind
   script:
   - ls 
-  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-  - docker build -t registry.gitlab.com/hsmade/svxlink .
-  - docker push registry.gitlab.com/hsmade/svxlink:latest
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+  - docker build -t $CI_REGISTRY_IMAGE .
+  - docker push $CI_REGISTRY_IMAGE:latest
