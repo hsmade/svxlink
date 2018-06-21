@@ -263,12 +263,13 @@ bool Logic::initialize(void)
     if (!state_pty->open())
     {
       cerr << "*** ERROR: Could not open state PTY "
-           << state_pty_path << " as spcified in configuration variable "
+           << state_pty_path << " as specified in configuration variable "
            << name() << "/" << "STATE_PTY" << endl;
       cleanup();
       return false;
     }
   }
+
 
   string value;
   if (cfg().getValue(name(), "ACTIVATE_MODULE_ON_LONG_CMD", value))
@@ -1463,7 +1464,6 @@ void Logic::dtmfDigitDetectedP(char digit, int duration)
 
 void Logic::audioStreamStateChange(bool is_active, bool is_idle)
 {
-  cout << "Logic::audioStreamStateChange(is_active:" << is_active << " is_idle:" << is_idle << ')' << endl;
   if (is_active)
   {
     fx_gain_ctrl->setGain(fx_gain_low);

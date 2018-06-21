@@ -104,7 +104,7 @@ namespace EchoLink
 class MsgHandler;
 class QsoImpl;
 class LocationInfo;
-  
+
 
 /****************************************************************************
  *
@@ -141,7 +141,7 @@ class ModuleEchoLink : public Module
     bool initialize(void);
     const char *compiledForVersion(void) const { return SVXLINK_VERSION; }
 
-    
+
   protected:
     /**
      * @brief 	Notify the module that the logic core idle state has changed
@@ -223,6 +223,7 @@ class ModuleEchoLink : public Module
     void allMsgsWritten(void);
     void commandHandler(const void *buf, size_t count); // WIM
     Async::Pty                      *pty;
+
 
     void onStatusChanged(EchoLink::StationData::Status status);
     void onStationListUpdated(void);

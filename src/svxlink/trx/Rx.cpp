@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <cstdlib>
-#include <string.h>
+#include <time.h>
 
 
 
@@ -199,11 +199,11 @@ map<string, RxFactory*> RxFactory::rx_factories;
  * Public member functions
  *
  ****************************************************************************/
-void Rx::setEnabled(bool status)
+
+void Rx::setEnabled(bool enabled)
 {
-  cout << "RX: " << m_name << ": setEnabled: " << status << endl;
-  m_is_enabled = status;
-  if (! status) {
+  m_enabled = enabled;
+  if (! enabled) {
     // close squelch, but set m_sql_open_hidden to what it WAS
     int was_open = m_sql_open;
     setSquelchState(false);
@@ -214,14 +214,8 @@ void Rx::setEnabled(bool status)
     // Set squelch to the correct, current status
     setSquelchState(m_sql_open_hidden);
   }
+
 }
-
-bool Rx::isEnabled(void)
-{
-  return m_is_enabled;
-}
-
-
 
 std::string Rx::muteStateToString(MuteState mute_state)
 {
@@ -239,8 +233,8 @@ std::string Rx::muteStateToString(MuteState mute_state)
 
 
 Rx::Rx(Config &cfg, const string& name)
-  : m_name(name), m_verbose(true), m_sql_open(false), m_sql_open_hidden(false), m_cfg(cfg),
-    m_sql_tmo_timer(0), m_is_enabled(true)
+  : m_name(name), m_verbose(true), m_enabled(true), m_sql_open(false), m_sql_open_hidden(false), m_cfg(cfg),
+    m_sql_tmo_timer(0)
 {
 } /* Rx::Rx */
 
@@ -339,27 +333,29 @@ Rx *RxFactory::createNamedRx(Config& cfg, const string& name)
 
 void Rx::setSquelchState(bool is_open)
 {
+//  cout << "Rx::setSquelchState: " << m_name << ": requested: " << is_open << endl;
+  // set m_sql_open_hidden to the sql state as well, so we can set the correct state on re-enable
   m_sql_open_hidden = is_open;
-
-  if (is_open && not m_is_enabled)
-  {
-    // cout << m_name << ": Refusing to open squelch, we're disabled" << endl;
-    return;
-  }
 
   if (is_open == m_sql_open)
   {
     return;
   }
-  
+
   if (m_verbose)
   {
     cout << m_name << ": The squelch is " << (is_open ? "OPEN" : "CLOSED")
          << " (" << signalStrength() << ")" << endl;
   }
-  m_sql_open = is_open;
-  squelchOpen(is_open);
-  
+  if (!m_enabled && is_open) {
+
+//    cout << "Rx::setSquelchState: " << m_name << ": Tried to open squelch on disabled receiver, ignoring" << endl;
+  } else {
+//    cout << "Rx::setSquelchState: " << m_name << ": setting to: " << (is_open?"OPEN":"CLOSED") << endl;
+    m_sql_open = is_open;
+    squelchOpen(is_open);
+  }
+
   if (m_sql_tmo_timer != 0)
   {
     m_sql_tmo_timer->setEnable(is_open);

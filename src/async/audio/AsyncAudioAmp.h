@@ -35,7 +35,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include <cmath>
-#include <iostream>
 
 
 /****************************************************************************
@@ -127,9 +126,7 @@ class AudioAmp : public Async::AudioProcessor
      * @brief 	Set the gain to use
      * @param 	gain_db The gain given in dB
      */
-    void setGain(float gain_db) {
-        std::cout << "setGain: " << gain_db << std::endl;
-        m_gain = powf(10, gain_db / 20); }
+    void setGain(float gain_db) { m_gain = powf(10, gain_db / 20); }
     
     /**
      * @brief 	Read the gain

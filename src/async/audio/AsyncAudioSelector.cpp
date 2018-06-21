@@ -33,7 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  ****************************************************************************/
 
-#include <iostream>
+
 
 /****************************************************************************
  *
@@ -77,22 +77,16 @@ using namespace Async;
  *
  * Local class definitions
  *
- *
  ****************************************************************************/
 
 class Async::AudioSelector::Branch : public AudioPassthrough
 {
   public:
     Branch(AudioSelector *selector, AudioSource *source)
-      : selector(selector), auto_select(false), prio(0), m_name(0)
+      : selector(selector), auto_select(false), prio(0)
     {
     }
     
-    void setName(char *name)
-    {
-        m_name = name;
-        cout << "selector: init: " << name << endl;
-    }
     void setSelectionPrio(int prio)
     {
       this->prio = prio;
@@ -129,15 +123,14 @@ class Async::AudioSelector::Branch : public AudioPassthrough
     
     virtual int writeSamples(const float *samples, int count)
     {
-        cout << m_name << " writeSamples: prio: " << prio << endl;
       if (auto_select && !isSelected())
       {
-        Branch *selected_branch = dynamic_cast<Branch *>(selector->handler());
-        assert(selected_branch != 0);
-        if (selected_branch->selectionPrio() < prio)
-        {
-          selector->selectBranch(this);
-        }
+	Branch *selected_branch = dynamic_cast<Branch *>(selector->handler());
+	assert(selected_branch != 0);
+	if (selected_branch->selectionPrio() < prio)
+	{
+	  selector->selectBranch(this);
+	}
       }
       return AudioPassthrough::writeSamples(samples, count);
     }    
@@ -156,7 +149,6 @@ class Async::AudioSelector::Branch : public AudioPassthrough
     AudioSelector *selector;
     bool auto_select;
     int prio;
-    char *m_name;
     
 }; /* class Async::AudioSelector::Branch */
 
@@ -229,15 +221,6 @@ AudioSelector::~AudioSelector(void)
 } /* AudioSelector::~AudioSelector */
 
 
-void AudioSelector::addSource(Async::AudioSource *source, char *name)
-{
-    cout << "Creating source with name " << name << " on selector" << endl;
-    assert(branch_map.find(source) == branch_map.end());
-    Branch *branch = new Branch(this, source);
-    branch->setName(name);
-    source->registerSink(branch);
-    branch_map[source] = branch;
-}
 void AudioSelector::addSource(Async::AudioSource *source)
 {
   assert(branch_map.find(source) == branch_map.end());
@@ -298,7 +281,6 @@ bool AudioSelector::autoSelectEnabled(AudioSource *source)
 
 void AudioSelector::selectSource(AudioSource *source)
 {
-    cout << branch_map.size() << "AudioSelector::selectSource(" << source << ')' << endl;
   Branch *branch = 0;
   
   if (source != 0)
@@ -334,7 +316,7 @@ void AudioSelector::selectSource(AudioSource *source)
 
 void AudioSelector::selectBranch(Branch *branch)
 {
-  cout << branch_map.size() << "AudioSelector::selectBranch: branch=" <<  branch << endl;
+  //printf("AudioSelector::selectBranch: branch=%p\n", branch);
   
   clearHandler();
 

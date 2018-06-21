@@ -38,7 +38,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <cstdlib>
 #include <vector>
-#include <string.h>
 
 #include <string.h>
 
@@ -971,6 +970,7 @@ void ModuleEchoLink::clientList(void) {
   }
   ss << "]";
   processEvent(ss.str());
+//  cout << ss.str();
 } /* clientList */
 
 /*
@@ -1190,9 +1190,9 @@ void ModuleEchoLink::onStateChange(QsoImpl *qso, Qso::State qso_state)
  */
 void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
 {
-  cout << "--- EchoLink chat message received from " << qso->remoteCallsign()
-       << " ---" << endl
-       << msg << endl;
+  //cout << "--- EchoLink chat message received from " << qso->remoteCallsign()
+  //     << " ---" << endl
+  //     << msg << endl;
   
   vector<QsoImpl*>::iterator it;
   for (it=qsos.begin(); it!=qsos.end(); ++it)
@@ -1208,7 +1208,6 @@ void ModuleEchoLink::onChatMsgReceived(QsoImpl *qso, const string& msg)
   replaceAll(escaped, "\\", "\\\\");
   replaceAll(escaped, "{", "\\{");
   replaceAll(escaped, "}", "\\}");
-  cout << "echolink: chat_received: " << escaped << endl;
   stringstream ss;
     // FIXME: This TCL specific code should not be here
   ss << "chat_received [subst -nocommands -novariables {";
@@ -1927,7 +1926,7 @@ void ModuleEchoLink::handleCommand(const string& cmd)
   }
   else if (cmd[0] == '5')   // Listen only
   {
-    if (cmd.size() < 2)
+    if (cmd.size() != 2 || cmd[1] > '1')
     {
       commandFailed(cmd);
       return;
