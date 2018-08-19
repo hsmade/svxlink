@@ -561,6 +561,26 @@ void ModuleEchoLink::commandHandler(const void *buf, size_t count) {
         }
       }
     }
+    } else if (strstr(command, ":M")) {
+      // mute client by callsign
+      vector<QsoImpl *>::iterator it;
+      for (it = qsos.begin(); it != qsos.end(); ++it) {
+        if (strstr(command, (*it)->remoteCallsign().c_str())) {
+          cout << "echolink: muting user " << (*it)->remoteCallsign() << endl;
+          (*it)->setListenOnly(true);
+        }
+      }
+    }
+    } else if (strstr(command, ":U")) {
+      // unmute client by callsign
+      vector<QsoImpl *>::iterator it;
+      for (it = qsos.begin(); it != qsos.end(); ++it) {
+        if (strstr(command, (*it)->remoteCallsign().c_str())) {
+          cout << "echolink: unmuting user " << (*it)->remoteCallsign() << endl;
+          (*it)->setListenOnly(false);
+        }
+      }
+    }
     command = strtok(NULL, "\n\r ");
     count -= sizeof(command);
   }
