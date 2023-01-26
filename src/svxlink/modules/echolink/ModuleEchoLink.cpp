@@ -534,9 +534,9 @@ void ModuleEchoLink::commandHandler(const void *buf, size_t count) {
         talker->disconnect();
       }
     } else if (strstr(command, "MUTE_ALL")) {
-        handleCommand("51")
+        handleCommand("51");
     } else if (strstr(command, "UNMUTE_ALL")) {
-        handleCommand("50")
+        handleCommand("50");
     } else if (strstr(command, ":D")) {
       // disconnect client by callsign
       vector<QsoImpl *>::iterator it;
