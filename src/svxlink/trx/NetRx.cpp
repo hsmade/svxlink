@@ -250,6 +250,8 @@ void NetRx::setMuteState(Rx::MuteState new_mute_state)
           {
             audio_dec->flushEncodedSamples();
           }
+	  // force the squelch to off, so we deselect this receiver if it happens to be active	      
+	  sql_is_open = false;	      
           break;
 
         case MUTE_ALL:  // MUTE_CONTENT -> MUTE_ALL
